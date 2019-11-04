@@ -37,37 +37,60 @@ class Controller
 			}
 			if($page==null){
 				include('view/admin_home.php');
-				//include('view/footer.php');
-				//exit;
 			}			
 			if($page=='view_user'){
-				if(isset($_REQUEST['year_graduated'])){
-					$year_grad=$_REQUEST['year_graduated'];
-					$result = $this->model->getAccounts2($year_grad);
-					include 'view/accounts.php';
-				}elseif(isset($_REQUEST['course_title'])){
-					$course_title=$_REQUEST['course_title'];
-					$result = $this->model->getAccounts3($course_title);
-					include 'view/accounts.php';
-				}elseif(isset($_REQUEST['college10'])){
-					$college10=$_REQUEST['college10'];				
-					$result = $this->model->getAccounts4($college10);
-					include 'view/accounts.php';
-				}elseif(isset($_REQUEST['searchlastfirst'])){
+
+				if(isset($_REQUEST['searchlastfirst'])){
 					$searchlastfirst=$_REQUEST['searchlastfirst'];
-					$result = $this->model->getAccounts6($searchlastfirst);
-					include 'view/accounts.php';
-				}else{
-					$result = $this->model->getAccounts();
-					include 'view/accounts.php';
+					$result11 = $this->model->get_search_result_admin1($searchlastfirst);
+					
 				}
-			
-				//exit;
+				if(isset($_REQUEST['college'])){
+				$college =  $_REQUEST['college'];
+				$result12 = $this->model->get_search_result2($college);
+				
+				}
+				if(isset($_REQUEST['course'])){
+					$course =  $_REQUEST['course'];
+					
+					$result13 = $this->model->get_search_result3($course);
+					
+				}
+				if(isset($_REQUEST['year_graduated'])){
+					$year_graduated =  $_REQUEST['year_graduated'];
+					
+					$result14 = $this->model->get_search_result4($year_graduated);
+					
+				}
+				if(isset($_REQUEST['year_graduated']) && ($_REQUEST['course']) && ($_REQUEST['college'])){
+					$year_graduated =  $_REQUEST['year_graduated'];
+					$course =  $_REQUEST['course'];
+					$college =  $_REQUEST['college'];
+					$result15 = $this->model->get_search_result5($year_graduated,$course,$college);
+					
+				}
+				include 'view/accounts_admin.php';
 			}
+
 			if($page=='reports'){
+				if(isset($_REQUEST['search_keyword'])){
+					$search_keyword=$_REQUEST['search_keyword'];
+					
+					$result2 = $this->model->search_keyword($search_keyword);
+				}
+				if(isset($_REQUEST['batch'])){
+					$batch=$_REQUEST['batch'];
+					$result1 = $this->model->search_batch($batch);
+				}
+
 				include 'view/reports.php';
-				//exit;
 			}
+
+			
+			
+
+
+
 			if($page=='create_country'){
 				if(isset($_POST['country'])){
 					$country = $_POST['country'];
@@ -154,8 +177,6 @@ class Controller
 				}else{
 					include 'view/course.php';	
 				}
-				
-				//exit;
 			}
 			if($page == 'course_delete'){
 				$course_id = $_POST['course_id'];
@@ -170,10 +191,8 @@ class Controller
 				foreach($course as $title=>$getcourse){
 						$course_name = $getcourse->course_title;
 				}
-				include 'view/course_edit.php';
-				
+				include 'view/course_edit.php';				
 			}
-
 			if($page == 'course_update'){
 				$course_id = $_POST['course_id'];
 				$course_name = $_POST['course_name'];
@@ -181,17 +200,14 @@ class Controller
 				$course = $this->model->getcourse();
 				include 'view/course1.php';
 			}
-
 			if($page == 'year_edit'){
 				$year_id = $_POST['year_id'];
 				$year = $this->model->getedityear($year_id);
 				foreach($year as $title=>$getyear){
 						$year_name = $getyear->year_graduated;
 				}
-				include 'view/year_edit.php';
-				
+				include 'view/year_edit.php';				
 			}
-
 			if($page == 'year_update'){
 				$year_id = $_POST['year_id'];
 				$year_name = $_POST['year_name'];
@@ -199,7 +215,6 @@ class Controller
 				$yeargraduated= $this->model->getyeargraduated();
 				include 'view/yeargraduated1.php';
 			}
-
 			if($page=='create_yeargraduated'){
 				if(isset($_POST['yeargraduated'])){
 					$yeargraduated = $_POST['yeargraduated'];
@@ -210,8 +225,6 @@ class Controller
 				}else{
 					include 'view/yeargraduated.php';	
 				}
-				
-				//exit;
 			}
 			if($page == 'year_delete'){
 				$year_id = $_POST['year_id'];
@@ -224,32 +237,27 @@ class Controller
 				$this->model->delete_position($position_id);
 				$result = $this->model->get_position();
 				include 'view/position_entry.php';	
-			}
-
-			
+			}			
 			if($page == 'position_edit'){
 				$position_id = $_POST['position_id'];
 				$position = $this->model->geteditposition($position_id);
 				foreach($position as $title=>$getposition){
 						$position_name = $getposition->position;
 						$max_vote = $getposition->max_vote;
+						$priority = $getposition->priority;
 				}
 				$result = $this->model->get_position();
-				include 'view/position_edit.php';	
-				
+				include 'view/position_edit.php';					
 			}
-
 			if($page == 'position_update'){
 				$position_id = $_POST['position_id'];
 				$position_name = $_POST['position_name'];
 				$max_vote = $_POST['max_vote'];
-				$this->model->update_position($position_id,$position_name,$max_vote);
+				$priority= $_POST['priority'];
+				$this->model->update_position($position_id,$position_name,$max_vote,$priority);
 				$result = $this->model->get_position();
 				include 'view/position_edit.php';	
 			}	
-
-
-
 			if($page == 'delete_user'){
 				$id = $_GET['id'];
 				$this->model->delete_user($id);
@@ -268,29 +276,22 @@ class Controller
 				$size=$_FILES['photo']['size'];
 				$type=$_FILES['photo']['type'];
 				$temp=$_FILES['photo']['tmp_name'];
-			  move_uploaded_file($temp,"view/upload/".$name);
-				
+			  move_uploaded_file($temp,"view/upload/".$name);				
 			  $news_title  = $_REQUEST['news_title'];
 			  $news_date  = $_REQUEST['news_date'];
 			  $article  = $_REQUEST['article'];
-			  $result = $this->model->insert_news($news_title,$news_date,$article,$name);
-	  
+			  $result = $this->model->insert_news($news_title,$news_date,$article,$name);	  
 			}
 					
-					$result = $this->model->get_news();
+				$result = $this->model->get_news();
 				include 'view/add_news.php';
-				//exit;
 			}
-
 			if($page == 'news_delete'){
 				$news_id = $_POST['news_id'];
 				$this->model->delete_news($news_id);
 				$result = $this->model->get_news();
 				include 'view/add_news.php';
 			}
-
-			
-
 			if($page == 'news_edit'){
 				$news_id = $_POST['news_id'];
 				$news = $this->model->geteditnews($news_id);
@@ -300,11 +301,9 @@ class Controller
 						$article = $getnews->article;
 				}
 				$result = $this->model->get_news();
-				include 'view/news_edit.php';
-				
+				include 'view/news_edit.php';			
 			}
 			if($page == 'news_update'){
-
 				$name=$_FILES['photo']['name'];
 				$size=$_FILES['photo']['size'];
 				$type=$_FILES['photo']['type'];
@@ -319,9 +318,6 @@ class Controller
 				$result = $this->model->get_news();
 				include 'view/news_edit.php';	
 			}	
-			
-
-
 			if($page=='add_events'){
 				if(isset($_REQUEST['event_title']) && isset($_REQUEST['event_type'])){
 					$venue = $_REQUEST['venue'];
@@ -331,13 +327,11 @@ class Controller
 					$course_participants = $_REQUEST['course_participants'];
 					$batch_participants = $_REQUEST['batch_participants'];
 					$requested_by = $_REQUEST['requested_by'];
-
 					$result = $this->model->insert_events($venue,$event_title,$event_type,$event_date,$course_participants,$batch_participants,$requested_by);
 					echo "<script type='text/javascript'>alert('" .$result. "');</script>";
 				}
 				$result = $this->model->get_events();
 				include 'view/add_events.php';
-				//exit;
 			}
 			if($page == 'delete_event'){
 				$event_id = $_POST['event_id'];
@@ -345,8 +339,6 @@ class Controller
 				$result = $this->model->get_events();
 				include 'view/add_events.php';
 			}
-
-
 			if($page == 'edit_event'){
 				$event_id = $_POST['event_id'];
 				$event = $this->model->geteditevent($event_id);
@@ -358,20 +350,15 @@ class Controller
 						$event_date = $getevent->event_date;
 				}
 				$result = $this->model->get_events();
-				include 'view/edit_events.php';
-				
+				include 'view/edit_events.php';				
 			}
 
 			if($page == 'event_details'){
 				$event_id = $_POST['event_id'];
 			
 				$result = $this->model->getevent2($event_id);
-				include 'view/event_details.php';
-				
-			}
-
-
-			
+				include 'view/event_details.php';				
+			}			
 			if($page == 'update_events'){
 				$event_id = $_REQUEST['event_id'];
 				$venue = $_REQUEST['venue'];
@@ -380,31 +367,24 @@ class Controller
 				$event_date = $_REQUEST['event_date']; 
 				$course_participants = $_REQUEST['course_participants'];
 				$batch_participants = $_REQUEST['batch_participants'];
-				$this->model->update_events($event_id,$venue,$event_title,$event_type,$event_date,$course_participants,$batch_participants);
-				
+				$this->model->update_events($event_id,$venue,$event_title,$event_type,$event_date,$course_participants,$batch_participants);				
 				$result = $this->model->get_events();
 				include 'view/edit_events.php';
 			}	
-
-
-
-
-
 			if($page=='create_election'){
-				if(isset($_REQUEST['election_title']) && ($_REQUEST['election_date'])&& ($_REQUEST['start_date']) && ($_REQUEST['due_date'])){
+				if(isset($_REQUEST['election_title']) && ($_REQUEST['election_date']) && ($_REQUEST['position1']) && ($_REQUEST['position1']) && ($_REQUEST['start_date']) && ($_REQUEST['due_date'])){
 					$election_title = $_REQUEST['election_title'];
 					$election_date = $_REQUEST['election_date'];
+					$position1 = $_REQUEST['position1'];
 					$nomination_start_date = $_REQUEST['start_date'];
 					$nomination_due_date = $_REQUEST['due_date'];
-					$result = $this->model->insert_election($election_title,$election_date,$nomination_start_date,$nomination_due_date);
+					$result = $this->model->insert_election($election_title,$election_date,$position1,$nomination_start_date,$nomination_due_date);
 					echo "<script type='text/javascript'>alert('" .$result. "');</script>";
 				} 
+				$result = $this->model->get_position();
 				$result1 = $this->model->get_election();
 				include 'view/create_election.php';
-				//exit;
 			}
-
-
 			if($page == 'edit_election'){
 				$election_id = $_POST['election_id'];
 				$election = $this->model->geteditelection($election_id);
@@ -428,9 +408,7 @@ class Controller
 				$position1 = $_REQUEST['position1'];
 				$nomination_start_date = $_REQUEST['start_date'];
 				$nomination_due_date = $_REQUEST['due_date'];
-				$result = $this->model->update_election($election_id,$election_title,$election_date,$position1,$nomination_start_date,$nomination_due_date);
-			
-				
+				$result = $this->model->update_election($election_id,$election_title,$election_date,$position1,$nomination_start_date,$nomination_due_date);				
 				$result = $this->model->get_position();
 				$result1 = $this->model->get_election();
 				include 'view/create_election.php';
@@ -443,13 +421,6 @@ class Controller
 				$result1 = $this->model->get_election();
 				include 'view/create_election.php';
 			}
-
-
-
-
-
-
-
 			if($page=='approve_event'){
 				$event_id = $_REQUEST['event_id'];
 				$this->model->update_event($event_id);
@@ -461,7 +432,6 @@ class Controller
 				
 			if($page=='nomination1'){
 				include 'view/nomination1.php';
-				//exit;
 			}
 			if($page=='approve'){
 				$nominee_id = $_REQUEST['nominee_id'];
@@ -478,11 +448,6 @@ class Controller
 				$this->model->delete_nominee($nominee_id);
 				include 'view/nomination1.php';
 			}	
-
-			
-
-
-
 			if($page=='decline_event'){
 				$event_id = $_REQUEST['event_id'];
 				$this->model->delete_event($event_id);
@@ -497,13 +462,45 @@ class Controller
 				if(isset($_REQUEST['position']) && ($_REQUEST['max_vote'])){
 					$position = $_REQUEST['position'];
 					$max_vote = $_REQUEST['max_vote'];
-
-					$result = $this->model->insert_position($position,$max_vote);
+					$priority = $_REQUEST['priority'];
+					$result = $this->model->insert_position($position,$max_vote,$priority);
 					echo "<script type='text/javascript'>alert('" . $result	 . "');</script>";
 				}
 				$result = $this->model->get_position();
-				include 'view/position_entry.php';	
+				include 'view/position_entry.php';				
+			}	
+
+
+			if($page=='election_details1'){
+				$result1 = $this->model->get_election();
+				include 'view/election_details1.php';				
+			}	
+
+			if($page=='election_results'){
 				
+				include 'view/election_results.php';				
+			}	
+
+
+			if($page=='event_details1'){
+				if(isset($_REQUEST['event_id'])){
+					$event_id = $_REQUEST['event_id'];
+					$result2 = $this->model->get_eventss($event_id);
+					$result3 = $this->model->guest_events($event_id);
+					$result = $this->model->get_events();
+					include 'view/event_details2.php';	
+				}else{
+					
+					$result = $this->model->get_events();
+					include 'view/event_details2.php';	
+				}
+						
+			}	
+
+			if($page=='news_article'){
+				$news_id = $_REQUEST['news_id'];
+				$result = $this->model->view_article1($news_id);
+				include('view/news_article.php');
 			}	
 
 			if($page == 'change_password'){
@@ -514,22 +511,16 @@ class Controller
 					echo "<script type='text/javascript'>alert('" . $result	 . "');</script>";
 					$admin_accounts = $this->model->getAccounts1($user_id);
 					foreach($admin_accounts as $title=>$getaccounts){
-						$password = $getaccounts->password;
-					
+						$password = $getaccounts->password;					
 					}
 					include 'view/change_password.php';	
 				}else{
 					include 'view/change_password.php';	
 				}
 				
-			}
-
-
-
-					
+			}					
 		}elseif($_SESSION['role']=='User')
 		{
-			//echo $_SESSION['user_id']. '  '. $_SESSION['firstname1'].'  '.$_SESSION['lastname1'].'  '.$_SESSION['username1'].'  '.$_SESSION['password1'];
 			include('view/menu_user.php');
 			if($page == 'logout'){
 				session_unset();
@@ -537,19 +528,24 @@ class Controller
 				header('Location:index.php');
 				exit;
 			}
-
-
-
-
 			if($page=='create_user_events'){
 				$result = $this->model->get_events();
 				$result2 = $this->model->get_events2();
 				include 'view/create_events2.php';
-				//exit;
 			}	
 
-
-
+			if($page=='news_article'){
+				$news_id = $_REQUEST['news_id'];
+				$result = $this->model->view_article1($news_id);
+				include('view/news_article.php');
+			}	
+/*
+			if($page=='news_article'){
+				$news_id = $_REQUEST['news_id'];
+				$result = $this->model->view_article1($news_id);
+				include('view/news_article.php');
+			}	
+*/
 			if($page=='add_events'){
 				if(isset($_REQUEST['event_title']) && isset($_REQUEST['event_type'])){
 					$venue = $_REQUEST['venue'];
@@ -559,15 +555,13 @@ class Controller
 					$course_participants = $_REQUEST['course_participants'];
 					$batch_participants = $_REQUEST['batch_participants'];
 					$requested_by = $_REQUEST['requested_by'];
-
 					$result = $this->model->insert_events($venue,$event_title,$event_type,$event_date,$course_participants,$batch_participants,$requested_by);
 					echo "<script type='text/javascript'>alert('" .$result. "');</script>";
 				}
 				$result = $this->model->get_events();
-
 				include 'view/add_events.php';
-				//exit;
 			}
+		
 
 			if($page == 'delete_event'){
 				$event_id = $_POST['event_id'];
@@ -575,7 +569,6 @@ class Controller
 				$result = $this->model->get_events();
 				include 'view/add_events.php';
 			}
-
 			if($page == 'event_envited'){
 				if(isset($_REQUEST['course']) && ($_REQUEST['batch'])){
 					$event_id = $_POST['event_id'];
@@ -588,16 +581,9 @@ class Controller
 					$result30 = $this->model->get_envited($course,$batch);
 					$result = $this->model->get_events();
 					include 'view/add_events30.php';
-
-				}
-			
-			
+				}						
 			}
-
-
-
 			if($page=='save_nominee'){
-
 				if(isset($_REQUEST['firstname']) && ($_REQUEST['middlename']) && ($_REQUEST['lastname'])){
 					
 					$firstname=$_REQUEST['firstname'];
@@ -616,47 +602,44 @@ class Controller
 					
 					include 'view/nomination.php';
 				}
-
 				}else{
 					include 'view/nomination.php';
-				}
-				
-				
-				
+				}								
 			}
 			if($page==null){
-				include('view/admin_home.php');
-				//include('view/footer.php');
-				//exit;
-			}			
+				include('view/user_home.php');
+			}	
+			
+			
 			if($page=='select_nominee'){
 				$nominee_id = $_REQUEST['nominee_id'];
 				$result = $this->model->getnominee($nominee_id);
 				include('view/nominee.php');
-				//include('view/footer.php');
-				//exit;
 			}				
 			if($page=='view_user'){
-				if(isset($_REQUEST['year_graduated'])){
-					$year_grad=$_REQUEST['year_graduated'];
-					$result = $this->model->getAccounts2($year_grad);
-					include 'view/accounts_user.php';
-				}elseif(isset($_REQUEST['course_title'])){
-					$course_title=$_REQUEST['course_title'];
-					$result = $this->model->getAccounts3($course_title);
-					include 'view/accounts_user.php';
-				}elseif(isset($_REQUEST['college10'])){
-					$college10=$_REQUEST['college10'];				
-					$result = $this->model->getAccounts4($college10);
-					include 'view/accounts_user.php';
-				}elseif(isset($_REQUEST['searchlastfirst'])){
-					$searchlastfirst=$_REQUEST['searchlastfirst'];
-					$result = $this->model->getAccounts6($searchlastfirst);
-					include 'view/accounts_user.php';
-				}else{
-					$result = $this->model->getAccounts();
-					include 'view/accounts_user.php';
+				if(isset($_REQUEST['searchlastfirst'])){
+					$searchlastfirst=$_REQUEST['searchlastfirst'];				
+					$result11 = $this->model->get_search_result_admin1($searchlastfirst);					
 				}
+				if(isset($_REQUEST['college'])){
+				$college =  $_REQUEST['college'];			
+				$result12 = $this->model->get_search_result2($college);				
+				}
+				if(isset($_REQUEST['course'])){
+					$course =  $_REQUEST['course'];					
+					$result13 = $this->model->get_search_result3($course);					
+				}
+				if(isset($_REQUEST['year_graduated'])){
+					$year_graduated =  $_REQUEST['year_graduated'];					
+					$result14 = $this->model->get_search_result4($year_graduated);					
+				}
+				if(isset($_REQUEST['year_graduated']) && ($_REQUEST['course']) && ($_REQUEST['college'])){
+					$year_graduated =  $_REQUEST['year_graduated'];
+					$course =  $_REQUEST['course'];
+					$college =  $_REQUEST['college'];
+					$result15 = $this->model->get_search_result5($year_graduated,$course,$college);					
+				}
+				include 'view/accounts_user.php';
 			}
 
 			if($page=='view_user1'){
@@ -683,14 +666,8 @@ class Controller
 					$college =  $_REQUEST['college'];
 					$result = $this->model->get_search_result5($year_graduated,$course,$college);
 				}
-				include 'view/accounts_user.php';	
-			
+				include 'view/accounts_user.php';				
 			}
-
-
-
-
-
 			if($page == 'delete_user'){
 				$id = $_GET['id'];
 				$this->model->delete_user($id);
@@ -699,26 +676,54 @@ class Controller
 			}
 			if($page=='nomination'){
 				include('view/nomination.php');
-				//include('view/footer.php');
-				//exit;
 			}
 			if($page=='user_add_news'){
 				$result = $this->model->get_news();
 				include('view/user_add_news.php');
-				//include('view/footer.php');
-				//exit;
 			}
-			if($page=='user_add_news'){
-				$result = $this->model->get_news();
-				include('view/user_add_news.php');
-				//include('view/footer.php');
-				//exit;
-			}
+			
 			if($page=='vote'){
-				include('view/vote.php');
-				//include('view/footer.php');
-				//exit;
+
+				$result = $this->model->vote_entry();
+				if($result=='found'){
+					include('view/vote_already.php');
+				}else{
+					include('view/vote.php');
+				}
+				
 			}
+
+			if($page=='pre_register'){
+				
+				$event_id= $_REQUEST['event_id'];
+				$result = $this->model->view_guest($event_id);
+				include('view/pre_register.php');
+			}
+
+			if($page=='pre_register_save'){
+		
+					$event_id= $_REQUEST['event_id'];
+					$firstname = $_REQUEST['firstname'];
+					$lastname = $_REQUEST['lastname'];
+					$this->model->insert_preregister($event_id,$firstname,$lastname);
+					$result = $this->model->view_guest($event_id);
+					include('view/pre_register.php');
+		
+				
+			}
+			if($page=='guest_delete'){
+				if(isset($_REQUEST['guest_id'])){
+					$event_id= $_REQUEST['event_id'];
+					$guest_id= $_REQUEST['guest_id'];
+					$this->model->delete_guest($guest_id);
+					$result = $this->model->view_guest($event_id);
+					include('view/pre_register.php');
+				}
+			
+			}
+
+
+
 			if($page == 'user_change_password'){
 				if(isset($_REQUEST['username']) && ($_REQUEST['password'])){
 					$user_id  = $_SESSION['user_id'];
@@ -732,7 +737,6 @@ class Controller
 					$country = $_REQUEST['country'];
 					$username = $_REQUEST['username'];
 					$password = $_REQUEST['password'];
-
 					$result = $this->model->update_username_password($addressline,$city,$spr,$zip,$social,$contact,$email,$country,$username,$password,$user_id);
 					echo "<script type='text/javascript'>alert('" . $result	 . "');</script>";
 					$user_accounts = $this->model->getuserAccounts1($user_id);
@@ -787,7 +791,7 @@ class Controller
 					$password = $_REQUEST['password'];
 					$role = $_REQUEST['role'];
 
-					if ($firstname && $lastname && $username && $password ){
+					if ($firstname && $middlename && $lastname && $college && $course && $yeargraduated && $username && $password ){
 
 						$result = $this->model->get_csv($firstname,$middlename,$lastname,$course,$yeargraduated);
 						
@@ -799,15 +803,9 @@ class Controller
 							echo '<script> alert ("You are not Graduated Yet!")</script>';
 							include('view/login.php');
 						}
-						//$this->model->insert_user($firstname,$middlename,$lastname,$addressline,$city,$spr,$zip,$country,$yeargraduated,$course,$college,$sex,$email,$contact,$social,$username,$password,$role);
-						//echo '<script> alert ("'.$result.'")</script>';
-						//echo '<script> alert ("Successfully Registered!")</script>';
-						//include('view/login.php');
-						//exit;
 					}else{
-						echo '<script> alert ("Please Fill All the Fields!")</script>';
+						echo '<script> alert ("Required Fields must be filled up!")</script>';
 						include('view/login.php');
-						//exit;
 					}
 					break;
 				}
