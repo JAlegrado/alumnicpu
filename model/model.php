@@ -14,6 +14,8 @@ class Model
 		}
 	}
 	public function getlogin($username,$password){
+		
+
 		global $role;
 		global $user_id;
 		global $firstname1;
@@ -21,7 +23,9 @@ class Model
 		global $username1;
 		global $password1;
 
-		$result= mysqli_query($this->db,"SELECT * from users where username='".$username."' && password='".$password."'");
+
+		if($username && $password){
+			$result= mysqli_query($this->db,"SELECT * from users where username='".$username."' && password='".$password."'");
 		while($getRow=mysqli_fetch_assoc($result))    		
 			{    			
 			  $user_id= $getRow['user_id'];
@@ -37,7 +41,28 @@ class Model
 			$_SESSION['username1']=$username1;                                 
 			$_SESSION['password1']=$password1;
 			$_SESSION['role']=$role;
+
+		}else{
+			header('Location:index.php');
+		}
+		
 	}
+
+
+
+
+	public function get_search_result_admin1($searchlastfirst)
+    {
+        $data = array();
+		$queryGetcollege = mysqli_query($this->db,"SELECT * from users where role='User' and firstname='$searchlastfirst' or lastname='$searchlastfirst'");
+		while($getRow=mysqli_fetch_object($queryGetcollege))    		
+		{    			
+		  $data[] = $getRow; // add the row in to the results (data) array
+		}
+		return $data;     
+	}
+
+
 
 
 	public function get_search_result1($searchlastfirst)
@@ -57,7 +82,7 @@ class Model
     {
         $data = array();
 
-		$queryGetcollege = mysqli_query($this->db,"SELECT * from users where role='User'and  college like '%".$college."%'");
+		$queryGetcollege = mysqli_query($this->db,"SELECT * from users where role='User' and college='$college'");
 
 		while($getRow=mysqli_fetch_object($queryGetcollege))    		
 		{    			
@@ -70,7 +95,7 @@ class Model
     {
         $data = array();
 
-		$queryGetcollege = mysqli_query($this->db,"SELECT * from users where role='User'and  course like '%".$course."%'");
+		$queryGetcollege = mysqli_query($this->db,"SELECT * from users where role='User'and  course='$course'");
 
 		while($getRow=mysqli_fetch_object($queryGetcollege))    		
 		{    			
@@ -83,7 +108,7 @@ class Model
     {
         $data = array();
 
-		$queryGetcollege = mysqli_query($this->db,"SELECT * from users where role='User'and yeargraduated like '%".$year_graduated."%'");
+		$queryGetcollege = mysqli_query($this->db,"SELECT * from users where role='User' and yeargraduated='$year_graduated'");
 
 		while($getRow=mysqli_fetch_object($queryGetcollege))    		
 		{    			
@@ -441,9 +466,9 @@ class Model
 
 
 
-	public function insert_position($position,$max_vote)
+	public function insert_position($position,$max_vote,$priority)
     {
-    	$insertQuery="INSERT into position1(position,max_vote) values('$position','$max_vote')";
+    	$insertQuery="INSERT into position1(position,max_vote,priority) values('$position','$max_vote','$priority')";
 		$result = mysqli_query($this->db,$insertQuery);
 		if(!$result)
 			return mysqli_error($this->db);
@@ -462,10 +487,10 @@ class Model
 		}
 		return $data;     
 	}
-	public function insert_election($election_title,$election_date,$nomination_start_date,$nomination_due_date)
+	public function insert_election($election_title,$election_date,$position1,$nomination_start_date,$nomination_due_date)
 	{
-		$insertQuery="INSERT into election(election_title,election_date,start_date,due_date) 
-									values('$election_title','$election_date','$nomination_start_date','$nomination_due_date')";
+		$insertQuery="INSERT into election(election_title,election_date,position1,start_date,due_date) 
+									values('$election_title','$election_date','$position1','$nomination_start_date','$nomination_due_date')";
 		$result = mysqli_query($this->db,$insertQuery);
 		if(!$result)
 			return mysqli_error($this->db);
@@ -724,9 +749,9 @@ class Model
 		}
 		return $data;     
 	}	
-	public function update_position($position_id,$position_name,$max_vote)
+	public function update_position($position_id,$position_name,$max_vote,$priority)
     {
-    	$updateQuery="UPDATE position1 SET position='$position_name',max_vote='$max_vote' where position_id='$position_id'";
+    	$updateQuery="UPDATE position1 SET position='$position_name',max_vote='$max_vote',priority='$priority' where position_id='$position_id'";
 		
 		$result = mysqli_query($this->db,$updateQuery);
 		
@@ -912,6 +937,138 @@ class Model
 		}
 		return $data;     
 	}
+
+	public function search_keyword($search_keyword)
+    {
+		$data = array();
+		
+		$wordsAry = explode(" ", $search_keyword);
+	
+		$wordsCount = count($wordsAry);
+		
+		$queryCondition = " WHERE ";
+		for($i=0;$i<$wordsCount;$i++) {
+			$queryCondition .= "event_title LIKE '%" . $wordsAry[$i] . "%' or election_title LIKE '%" . $wordsAry[$i] . "%' ";
+			if($i!=$wordsCount-1) {
+				$queryCondition .= " OR ";
+			}
+		}
+		$sql = "SELECT * FROM events,election " . $queryCondition;
+		
+
+		$get_query = mysqli_query($this->db,$sql);
+
+		while($getRow=mysqli_fetch_object($get_query))    		
+		{    			
+		  $data[] = $getRow; // add the row in to the results (data) array
+		}
+		return $data;     
+	}
+
+	public function highlightKeywords($text, $keyword) {
+		$wordsAry = explode(" ", $keyword);
+		$wordsCount = count($wordsAry);
+		
+		for($i=0;$i<$wordsCount;$i++) {
+			$highlighted_text = "<span style='font-weight:bold;background-color:black;color:white;'>$wordsAry[$i]</span>";
+			$text = str_ireplace($wordsAry[$i], $highlighted_text, $text);
+		}
+
+		return $text;
+	}
+
+
+	public function search_batch($batch)
+    {
+        $data = array();
+		
+		$sql = mysqli_query($this->db,"SELECT * FROM events,election WHERE batch_participants='$batch' ");
+		while($getRow=mysqli_fetch_object($sql))    		
+		{    			
+		  $data[] = $getRow; // add the row in to the results (data) array
+		}
+		return $data;     
+	}
+
+	public function insert_preregister($event_id,$firstname,$lastname)
+    {
+    	$insertQuery="INSERT into guest(event_id,firstname,lastname) values('$event_id','$firstname','$lastname')";
+		$result = mysqli_query($this->db,$insertQuery);
+		if(!$result)
+			return mysqli_error($this->db);
+		else
+			return "Record Save";
+	}
+
+	public function view_guest($event_id)
+    {
+        $data = array();
+		
+		$sql = mysqli_query($this->db,"SELECT * FROM guest where event_id='$event_id'");
+		while($getRow=mysqli_fetch_object($sql))    		
+		{    			
+		  $data[] = $getRow; // add the row in to the results (data) array
+		}
+		return $data;     
+	}
+	public function delete_guest($guest_id)
+    {
+		$deleteQuery="DELETE from guest where guest_id=$guest_id";
+		
+		$result = mysqli_query($this->db,$deleteQuery);
+		
+		if(!$result)
+			return mysqli_error($this->db);
+		else
+			return "Record Deleted";
+	}
+
+	public function get_eventss($event_id)
+    {
+        $data = array();
+		
+		$sql = mysqli_query($this->db,"SELECT * FROM events where event_id='$event_id'");
+		while($getRow=mysqli_fetch_object($sql))    		
+		{    			
+		  $data[] = $getRow; 
+		}
+		return $data;     
+	}
+
+	public function guest_events($event_id)
+    {
+        $data = array();
+		
+		$sql = mysqli_query($this->db,"SELECT * FROM guest where event_id='$event_id'");
+		while($getRow=mysqli_fetch_object($sql))    		
+		{    			
+		  $data[] = $getRow; 
+		}
+		return $data;     
+	}
+
+	public function view_article1($news_id)
+    {
+        $data = array();
+		$sql = mysqli_query($this->db,"SELECT * FROM add_news where news_id='$news_id'");
+		while($getRow=mysqli_fetch_object($sql))    		
+		{    			
+		  $data[] = $getRow; 
+		}
+		return $data;     
+	}
+
+	public function vote_entry()
+    {
+		$result = mysqli_query($this->db,"SELECT * FROM votes WHERE voters_id='".$_SESSION['user_id']."'") or die ("Could not search");
+  		$rowcount=mysqli_num_rows($result);
+  		if($rowcount>0){
+	  		return 'found';
+  		}else{
+	  		return 'notfound';
+  		}
+	}
+
 
 }	
 ?>
